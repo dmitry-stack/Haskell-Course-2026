@@ -110,30 +110,30 @@ decode = foldr (\(x,n) acc -> replicate n x ++ acc) []
 
 main :: IO()
 main = do
-  print "fmap"
+  putStrLn "fmap"
   print (fmap (+1) seq1)
-  print "seqToList"
+  putStrLn "\nseqToList"
   print(seqToList seq1)
-  print "seqLength"
+  putStrLn "\nseqLength"
   print(seqLength seq1)
-  print "Semigroup"
+  putStrLn "\nSemigroup"
   print(Single 2 <> Single 3)
-  print "tailElem"
+  putStrLn "\ntailElem"
   print(tailElem 2 seq1)
   print(tailElem 9 seq1)
-  print "tailToList"
+  putStrLn "\ntailToList"
   print(tailToList seq1)
-  print "tailRPN"
+  putStrLn "\ntailRPN"
   print(tailRPN[TNum 3, TNum 2, TAdd])
-  print "myReverse"
+  putStrLn "\nmyReverse"
   print(myReverse[1,2,3])
-  print "myTakeWhile"
+  putStrLn "\nmyTakeWhile"
   print(myTakeWhile even [2,3,6])
-  print "decimal"
+  putStrLn "\ndecimal"
   print(decimal[1,2,3])
-  print "encode"
+  putStrLn "\nencode"
   print(encode "aaabbbccc")
-  print "decode"
+  putStrLn "\ndecode"
   print(decode [('a',3),('b',4)])
 
 
