@@ -1,0 +1,14 @@
+cabal-version:      3.0
+name:               sqlliteclone
+version:            0.1.0.0
+
+executable sqlliteclone
+    main-is:          Main.hs
+    other-modules:    AST, Parser, Engine, Optimizer, Tests, UnitTests
+    build-depends:
+        base       >= 4.7 && < 5
+      , containers
+      , megaparsec
+      , QuickCheck
+    hs-source-dirs:   .
+    default-language: Haskell2010

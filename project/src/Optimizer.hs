@@ -13,8 +13,9 @@ optimize (Project cols1 (Project cols2 q)) =
   optimize (Project cols1 q)
 
 
-optimize (Filter cond (Project cols q)) = 
-  Project cols (optimize (Filter cond q))
+
+optimize (Filter cond (Join left right joinCond)) =
+  Join (optimize (Filter cond left)) (optimize right) joinCond
 
 optimize (Project cols q)       = Project cols (optimize q)
 optimize (Filter cond q)        = Filter cond (optimize q)

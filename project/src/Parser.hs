@@ -47,11 +47,21 @@ parseOp = choice
   ]
 
 
-parseCond :: Parser Cond
-parseCond = do
+parseAtomCond :: Parser Cond
+parseAtomCond = do
   leftCol <- identifier
   op <- parseOp
   (CmpCol leftCol op <$> parseValue) <|> (CmpCols leftCol op <$> identifier)
+
+parseCond :: Parser Cond
+parseCond = do
+  left <- parseAtomCond
+  rest left
+  where
+    rest left = 
+      (symbol "AND" >> parseAtomCond >>= \right -> rest (And left right))
+      <|> (symbol "OR"  >> parseAtomCond >>= \right -> rest (Or  left right))
+      <|> return left
 
 
 parseCreateTable :: Parser Statement

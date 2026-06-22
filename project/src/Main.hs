@@ -8,6 +8,8 @@ import qualified Data.Map as Map
 import System.IO (hFlush, stdout)
 import Text.Megaparsec (parse, errorBundlePretty)
 import Optimizer
+import Tests
+import UnitTests
 
 
 makeRow :: [(String, Value)] -> Row
@@ -42,9 +44,13 @@ main :: IO ()
 main = do
   putStrLn "=========================================="
   putStrLn " SqlLiteClone: Interactive Haskell Engine "
-  putStrLn " Type 'quit' or 'exit' to leave.          "
+  putStrLn " :tests  - run all tests                  "
+  putStrLn " :demo   - show optimizer plan             "
+  putStrLn " quit    - exit                            "
   putStrLn "==========================================\n"
   repl initialDb initialSchema
+
+
 
 repl :: Database -> Map String [String] -> IO ()
 repl db schema = do
@@ -54,28 +60,39 @@ repl db schema = do
   
   if input `elem` ["quit", "exit", ":q"]
     then putStrLn "Goodbye!"
-    else case parse parseSQL "" input of
+  else if input == ":tests"
+    then do
+      runUnitTests
+      runTests
+      repl db schema
+  else if input == ":demo"
+    then do
+      putStrLn "\n[OPTIMIZER DEMO]"
+      putStrLn $ "Before: " ++ show terribleQuery
+      putStrLn $ "After:  " ++ show (optimize terribleQuery)
+      repl db schema
+  else case parse parseSQL "" input of
       Left err -> do
         putStrLn $ errorBundlePretty err
         repl db schema
-
       Right stmt -> executeStmt db schema stmt
-
 executeStmt :: Database -> Map String [String] -> Statement -> IO ()
 executeStmt db schema stmt = case stmt of
 
   SelectStmt query -> do
     let optimizedPlan = optimize query
     putStrLn "\n[EXPLAIN PLAN]"
-    putStrLn $ "Original : " ++ show query
-    putStrLn $ "Optimized: " ++ show optimizedPlan
+    if optimizedPlan == query
+      then putStrLn $ "Plan: " ++ show query
+      else do
+        putStrLn $ "Original : " ++ show query
+        putStrLn $ "Optimized: " ++ show optimizedPlan
     putStrLn "--------------"
-
     case evalQuery db optimizedPlan of
       Left err -> putStrLn err
       Right table -> do
-         mapM_ print table 
-         putStrLn $ "(" ++ show (length table) ++ " rows returned)"
+        mapM_ print table
+        putStrLn $ "(" ++ show (length table) ++ " rows returned)"
     repl db schema
 
   CreateTable tableName colDefs -> do
@@ -104,9 +121,9 @@ executeStmt db schema stmt = case stmt of
 
 
 terribleQuery :: Query
-terribleQuery = 
-  Filter (CmpCol "age" Gt (IntV 18)) 
-    (Project ["name", "age"] 
-      (Filter (CmpCol "name" Eq (StrV "Alice")) 
-        (Project ["id", "name", "age"] 
-          (From "Users"))))
+terribleQuery =
+  Filter (CmpCol "age" Gt (IntV 18))
+    (Join
+      (Filter (CmpCol "name" Eq (StrV "Alice")) (From "Users"))
+      (From "Orders")
+      (CmpCols "id" Eq "user_id"))
